@@ -20,7 +20,7 @@ namespace IngameScript
     partial class Program : MyGridProgram
     {
 
-        /*  Planning Notes aaabbb:
+        /*  Planning Notes:
          *  
          *  Production Management
          *      send content of chests via antenna
