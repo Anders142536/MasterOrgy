@@ -21,7 +21,6 @@ namespace IngameScript
     {
 
         /*  Planning Notes:
-         *  
          *  Production Management
          *      send content of chests via antenna
          *          eject everything beyond a certain quota of defined blocks
