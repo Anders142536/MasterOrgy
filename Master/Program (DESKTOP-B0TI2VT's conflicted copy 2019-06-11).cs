@@ -20,34 +20,67 @@ namespace IngameScript
     partial class Program : MyGridProgram
     {
 
-        /*  Planning Notes:
+        /*  Credits:
+         *      Vindicar: https://github.com/the-vindicar/SE-LifeSupport/blob/master/LifeSupport/TaskStockManager.cs
+         *      Keks:
          *  
-         *  Production Management
+         *  
+         *  
+         *  Logical Units:
+         *  
+         *  4. Production Management / Chest display / chest sorter
          *      send content of chests via antenna
+         *      content display of whole base
+         *          -> set production quota
+         *              -> font size for 27 lines
+         *              one screen for components
+         *              one screen for tools
+         *                  maybe small loading bar?
+         *                  
+         *          quota status screen
+         *              nice loading bar
+         *              same sorting as quota setting screen
+         *              display additional ores required for fulfillment of quota
+         *  
          *          eject everything beyond a certain quota of defined blocks
+         *          
          *          stack items in chest
          *      take care of filling of refineries
+         *          -> sort ores chests based on refinery speed
          *              -> fill refineries depending on speed/yield modules
          *              -> set preference for speed or yield modules
          *              -> display speed or yield seperatly with remaining time
          *              -> yield may help speed module refineries until yield materials are back, not the other way around, displayed as (helping)
          *      ejector management
          *          -> if more than quota of component, ingot or ore is present, eject it via predefined connector.
-         *  Clock / Lights
+         *  3. Clock / Lights
          *  
          *  Elevator
          *  
-         *  Garage Door Management
+         *  2. Garage Door Management
          *  
          *  Solar Panel Adjustment
          *  
-         *  airlocks
+         *  5. airlocks
          *  
-         *  Energy Management / Power Display
-         *      turn on engines if output > current max production
+         *  1. Energy Management / Power Display
+         *      turn on engines if output > current max proction
          *      display some values
          *  Master:
-         *      make all screens accessible via the output screen, so separate screens are not a necessity
+         *      create radio button list
+         *      create check list
+         *      
+         *      
+         *  
+         *  
+         * Command:
+         * 
+         *      up
+         *      down
+         *      enter
+         *      back
+         *      load
+         * 
          * */
 
         //controlling what is activated
@@ -83,7 +116,6 @@ namespace IngameScript
         MyCommandLine commandline = new MyCommandLine();
         Dictionary<string, Action> commands = new Dictionary<string, Action>(StringComparer.OrdinalIgnoreCase);
         MyIni ini = new MyIni();
-        IMyProgrammableBlock me;
         Menu main;
         Menu current;
         List<IMyTerminalBlock> blocks = new List<IMyTerminalBlock>();
@@ -97,48 +129,62 @@ namespace IngameScript
 
         public Program()
         {
-            Runtime.UpdateFrequency = UpdateFrequency.Update10;
-            GridTerminalSystem.GetBlocks(blocks);
-            fetchedBlocks = true;
-            me = Me;
-
-            //check for master screen
-            IMyTerminalBlock temp = blocks.Find(x => x.CustomName.Contains("[Master]"));
-            if (temp is IMyTextPanel) output = (IMyTextPanel)temp;
-            if (output != null) writeLog("Master output screen found");
-            else writeLog("No Master output screen found! Please add the tag [Master] to the name of a text panel and recompile this script.");
-
-            main = new Menu(null, "    Main Menu", "Main Menu", this);
-            current = main;
-
-            String customData = Me.CustomData;
-
-            if (Storage != "" && ini.TryParse(Storage))
+            try
             {
-                writeLog("Parseable Ini found in Storage");
-                loadIni(true);
-            } else
-            {
-                writeLog("Storage is empty or unreadable");
-                if (customData != "" && ini.TryParse(customData))
+                Runtime.UpdateFrequency = UpdateFrequency.Update10;
+                GridTerminalSystem.GetBlocks(blocks);
+                fetchedBlocks = true;
+
+                //check for master screen
+                IMyTerminalBlock temp = blocks.Find(x => x.CustomName.Contains("[Master]"));
+                if (temp is IMyTextPanel) output = (IMyTextPanel)temp;
+                if (output != null) writeLog("Master output screen found");
+                else writeLog("No Master output screen found! Please add the tag [Master] to the name of a text panel and recompile this script.");
+
+                main = new Menu(null, "    Main Menu", "Main Menu", this);
+                current = main;
+
+                String customData = Me.CustomData;
+
+                if (Storage != "" && ini.TryParse(Storage))
                 {
-                    writeLog("Parseable Ini found in Custom Data");
-                    loadIni();
-                } else
-                {
-                    writeLog("Custom Data is empty or unreadable");
+                    writeLog("Parseable Ini found in Storage");
+                    loadIni(true);
                 }
+                else
+                {
+                    writeLog("Storage is empty or unreadable");
+                    if (customData != "" && ini.TryParse(customData))
+                    {
+                        writeLog("Parseable Ini found in Custom Data");
+                        loadIni();
+                    }
+                    else
+                    {
+                        writeLog("Custom Data is empty or unreadable");
+                    }
+                }
+
+                createMenu();
+
+                if (output != null) reprintMenu();
+
+                //commands that the script needs to understand
+                commands["up"] = up;
+                commands["down"] = down;
+                commands["enter"] = enter;
+                commands["back"] = back;
+            } catch (Exception e)
+            {
+                writeLog("* * * * * * * * * * *\n" +
+                    "* Exception caught! *\n" +
+                    "* * * * * * * * * *\n" +
+                    "Please contact the author of this script with the following text and a detailed description of what you did." +
+                    "\nType: " + e.GetType() +
+                    "\nSource: " + e.Source +
+                    "\nMessage: " + e.Message +
+                    "\nStacktrace:\n" + e.StackTrace, true);
             }
-
-            createMenu();
-            
-            if (output != null) reprintMenu();
-
-            //commands that the script needs to understand
-            commands["up"] = up;
-            commands["down"] = down;
-            commands["enter"] = enter;
-            commands["back"] = back;    
         }
 
         //Copying the ini to the Storage String
@@ -424,11 +470,8 @@ namespace IngameScript
                     {
                         if (ini.Get(section, "use Airlocks").TryGetBoolean(out enableAirlocks))
                         {
-                            if (enableAirlocks)
-                            {
-                                airlocks = new Airlocks(this);
-                                canAirlocks = true;
-                            }
+                            if (airlocks == null) airlocks = new Airlocks(this);
+                            canAirlocks = true;
                         } else
                         {
                             writeLog("use Airlocks requires either true, 1, false or 0");
@@ -444,11 +487,8 @@ namespace IngameScript
                     {
                         if (ini.Get(section, "use Clock").TryGetBoolean(out enableClock))
                         {
-                            if (enableClock)
-                            {
-                                clock = new Clock(this);
-                                canClock = true;
-                            }
+                            if (clock == null) clock = new Clock(this);
+                            canClock = true;
                         }
                         else
                         {
@@ -465,11 +505,8 @@ namespace IngameScript
                     {
                         if (ini.Get(section, "use Elevator").TryGetBoolean(out enableElevator))
                         {
-                            if (enableElevator)
-                            {
-                                elevator = new Elevator(this);
-                                canElevator = true;
-                            }
+                            if (elevator == null) elevator = new Elevator(this);
+                            canElevator = true;
                         }
                         else
                         {
@@ -486,11 +523,8 @@ namespace IngameScript
                     {
                         if (ini.Get(section, "use Energy Management").TryGetBoolean(out enableEnergyManagement))
                         {
-                            if (enableEnergyManagement)
-                            {
-                                energy = new EnergyManagement(this);
-                                canEnergyManagement = true;
-                            }
+                            if (energy == null) energy = new EnergyManagement(this);
+                            canEnergyManagement = true;
                         }
                         else
                         {
@@ -507,11 +541,8 @@ namespace IngameScript
                     {
                         if (ini.Get(section, "use Garage Management").TryGetBoolean(out enableGarageManagement))
                         {
-                            if (enableGarageManagement)
-                            {
-                                garage = new GarageManagement(this);
-                                canGarageManagement = true;
-                            }
+                            if (garage == null) garage = new GarageManagement(this);
+                            canGarageManagement = true;
                         }
                         else
                         {
@@ -528,11 +559,8 @@ namespace IngameScript
                     {
                         if (ini.Get(section, "use Production Management").TryGetBoolean(out enableProductionManagement))
                         {
-                            if (enableProductionManagement)
-                            {
-                                production = new ProductionManagement(this);
-                                canProductionManagement = true;
-                            }
+                            if (production == null) production = new ProductionManagement(this);
+                            canProductionManagement = true;
                         }
                         else
                         {
@@ -549,11 +577,8 @@ namespace IngameScript
                     {
                         if (ini.Get(section, "use Solarpanel Adjustment").TryGetBoolean(out enableSolarpanelAdjustment))
                         {
-                            if (enableSolarpanelAdjustment)
-                            {
-                                solar = new SolarAdjustment(this);
-                                canSolarpanelAdjustment = true;
-                            }
+                            if (solar == null) solar = new SolarAdjustment(this);
+                            canSolarpanelAdjustment = true;
                         }
                         else
                         {
@@ -900,25 +925,11 @@ namespace IngameScript
 
         }
 
-        /*
-        void loadFunctionality(ref MyIni ini, String key, out bool enabler)
-        {
-            String section = " Functionalities ";
-            if (ini.ContainsSection(section))
-            {
-                if (ini.ContainsKey(new MyIniKey(section, key)))
-                {
-
-                }
-            }
-        }
-        */
-
         void printIni()
         {
             printIni(false);
         }
-
+        
         void printIni(bool toStorage)
         {
             ini.Clear();
@@ -1101,7 +1112,12 @@ namespace IngameScript
         //adds the logline toWrite to the bottom of the screen, deletes the most top line if it would
         //exceed the height of the textpanel and adds the line to the custom data field, where
         //every log is saved until the script is recompiled
-        public void writeLog(String toWrite, bool writeEcho = false)
+        public void writeLog(String toWrite)
+        {
+            writeLog(toWrite, false);
+        }
+
+        public void writeLog(String toWrite, bool writeEcho)
         {
             if (toWrite != null)
             {
@@ -1161,7 +1177,6 @@ namespace IngameScript
             protected String header;
             protected String label;
             protected int index = 0;
-			protected int page = 0;
             protected List<MenuObject> children;
 
             //constructors
@@ -1224,33 +1239,38 @@ namespace IngameScript
                 switch (children[index].name)
                 {
                     case "Select Log-Screen":
+                        pro.writeLog("reach 1");
                         pro.fetchBlocks();
+                        pro.writeLog("reach 2");
                         List<IMyTerminalBlock> screensLogs = pro.blocks.FindAll(x =>
                                 x is IMyTextPanel
                                 && x != pro.output
                                 && x != pro.debug
-                                && (pro.airlocks == null    || !pro.airlocks.usesScreen(x))
-                                && (pro.clock == null       || !pro.clock.usesScreen(x))
-                                && (pro.elevator == null    || !pro.elevator.usesScreen(x))
-                                && (pro.energy == null      || !pro.energy.usesScreen(x))
-                                && (pro.garage == null      || !pro.garage.usesScreen(x))
-                                && (pro.production == null  || !pro.production.usesScreen(x))
-                                && (pro.solar == null       || !pro.solar.usesScreen(x)));
+                                && !pro.airlocks.usesScreen(x)
+                                && !pro.clock.usesScreen(x)
+                                && !pro.elevator.usesScreen(x)
+                                && !pro.energy.usesScreen(x)
+                                && !pro.garage.usesScreen(x)
+                                && !pro.production.usesScreen(x)
+                                && !pro.solar.usesScreen(x));
+                        pro.writeLog("reach 3");
                         addBlocksAsRadio(screensLogs, "    Log-Screen Selection", "Select Log-Screen", "Choose a screen to display logs");
+
+                        pro.writeLog("reach 4");
                         break;
                     case "Select Debug-Screen":
                         pro.fetchBlocks();
-                        List<IMyTerminalBlock> screensDebug = pro.blocks.FindAll(x =>
+                        List<IMyTerminalBlock> screensDebug = pro.blocks.FindAll(x => 
                                 x is IMyTextPanel
                                 && x != pro.output
                                 && x != pro.logs
-                                && (pro.airlocks == null    || !pro.airlocks.usesScreen(x))
-                                && (pro.clock == null       || !pro.clock.usesScreen(x))
-                                && (pro.elevator == null    || !pro.elevator.usesScreen(x))
-                                && (pro.energy == null      || !pro.energy.usesScreen(x))
-                                && (pro.garage == null      || !pro.garage.usesScreen(x))
-                                && (pro.production == null  || !pro.production.usesScreen(x))
-                                && (pro.solar == null       || !pro.solar.usesScreen(x)));
+                                && !pro.airlocks.usesScreen(x)
+                                && !pro.clock.usesScreen(x)
+                                && !pro.elevator.usesScreen(x)
+                                && !pro.energy.usesScreen(x)
+                                && !pro.garage.usesScreen(x)
+                                && !pro.production.usesScreen(x)
+                                && !pro.solar.usesScreen(x));
                         addBlocksAsRadio(screensDebug, "    Debug-Screen Selection", "Select Debug-Screen", "Choose a screen to display debug information");
                         break;
                     default:
@@ -1280,17 +1300,17 @@ namespace IngameScript
                         List<IMyTerminalBlock> screensOreQuota = pro.blocks.FindAll(x =>
                                 x is IMyTextPanel
                                 && !pro.usesScreen(x)
-                                && (pro.airlocks == null    || !pro.airlocks.usesScreen(x))
-                                && (pro.clock == null       || !pro.clock.usesScreen(x))
-                                && (pro.elevator == null    || !pro.elevator.usesScreen(x))
-                                && (pro.energy == null      || !pro.energy.usesScreen(x))
-                                && (pro.garage == null      || !pro.garage.usesScreen(x))
+                                && !pro.airlocks.usesScreen(x)
+                                && !pro.clock.usesScreen(x)
+                                && !pro.elevator.usesScreen(x)
+                                && !pro.energy.usesScreen(x)
+                                && !pro.garage.usesScreen(x)
                                 && !pro.production.ingotsScreen.Contains(x)
                                 && !pro.production.components1Screen.Contains(x)
                                 && !pro.production.components2Screen.Contains(x)
                                 && !pro.production.toolsScreen.Contains(x)
                                 && !pro.production.industryScreen.Contains(x)
-                                && (pro.solar == null       || !pro.solar.usesScreen(x)));
+                                && !pro.solar.usesScreen(x));
 
                         CheckMenu menuOre = new CheckMenu(this, "   Ore Quota Screen Selection", "Select Ore Quota Screen", pro);
                         menuOre.setLabel("Choose the screens to display ore quotas");
@@ -1305,17 +1325,17 @@ namespace IngameScript
                         List<IMyTerminalBlock> screensIngotQuota = pro.blocks.FindAll(x =>
                                 x is IMyTextPanel
                                 && !pro.usesScreen(x)
-                                && (pro.airlocks == null    || !pro.airlocks.usesScreen(x))
-                                && (pro.clock == null       || !pro.clock.usesScreen(x))
-                                && (pro.elevator == null    || !pro.elevator.usesScreen(x))
-                                && (pro.energy == null      || !pro.energy.usesScreen(x))
-                                && (pro.garage == null      || !pro.garage.usesScreen(x))
+                                && !pro.airlocks.usesScreen(x)
+                                && !pro.clock.usesScreen(x)
+                                && !pro.elevator.usesScreen(x)
+                                && !pro.energy.usesScreen(x)
+                                && !pro.garage.usesScreen(x)
                                 && !pro.production.oresScreen.Contains(x)
                                 && !pro.production.components1Screen.Contains(x)
                                 && !pro.production.components2Screen.Contains(x)
                                 && !pro.production.toolsScreen.Contains(x)
                                 && !pro.production.industryScreen.Contains(x)
-                                && (pro.solar == null || !pro.solar.usesScreen(x)));
+                                && !pro.solar.usesScreen(x));
 
                         CheckMenu menuIngot = new CheckMenu(this, "   Ingot Quota Screen Selection", "Select Ingot Quota Screen", pro);
                         menuIngot.setLabel("Choose the screens to display ingot quotas");
@@ -1330,17 +1350,17 @@ namespace IngameScript
                         List<IMyTerminalBlock> screensComp1Quota = pro.blocks.FindAll(x =>
                                 x is IMyTextPanel
                                 && !pro.usesScreen(x)
-                                && (pro.airlocks == null    || !pro.airlocks.usesScreen(x))
-                                && (pro.clock == null       || !pro.clock.usesScreen(x))
-                                && (pro.elevator == null    || !pro.elevator.usesScreen(x))
-                                && (pro.energy == null      || !pro.energy.usesScreen(x))
-                                && (pro.garage == null      || !pro.garage.usesScreen(x))
+                                && !pro.airlocks.usesScreen(x)
+                                && !pro.clock.usesScreen(x)
+                                && !pro.elevator.usesScreen(x)
+                                && !pro.energy.usesScreen(x)
+                                && !pro.garage.usesScreen(x)
                                 && !pro.production.oresScreen.Contains(x)
                                 && !pro.production.ingotsScreen.Contains(x)
                                 && !pro.production.components2Screen.Contains(x)
                                 && !pro.production.toolsScreen.Contains(x)
                                 && !pro.production.industryScreen.Contains(x)
-                                && (pro.solar == null || !pro.solar.usesScreen(x)));
+                                && !pro.solar.usesScreen(x));
 
                         CheckMenu menuComp1 = new CheckMenu(this, "   Component1 Quota Screen Selection", "Select Component1 Quota Screen", pro);
                         menuComp1.setLabel("Choose the screens to display component1 quotas");
@@ -1355,17 +1375,17 @@ namespace IngameScript
                         List<IMyTerminalBlock> screensComp2Quota = pro.blocks.FindAll(x =>
                                 x is IMyTextPanel
                                 && !pro.usesScreen(x)
-                                && (pro.airlocks == null    || !pro.airlocks.usesScreen(x))
-                                && (pro.clock == null       || !pro.clock.usesScreen(x))
-                                && (pro.elevator == null    || !pro.elevator.usesScreen(x))
-                                && (pro.energy == null      || !pro.energy.usesScreen(x))
-                                && (pro.garage == null      || !pro.garage.usesScreen(x))
+                                && !pro.airlocks.usesScreen(x)
+                                && !pro.clock.usesScreen(x)
+                                && !pro.elevator.usesScreen(x)
+                                && !pro.energy.usesScreen(x)
+                                && !pro.garage.usesScreen(x)
                                 && !pro.production.oresScreen.Contains(x)
                                 && !pro.production.ingotsScreen.Contains(x)
                                 && !pro.production.components1Screen.Contains(x)
                                 && !pro.production.toolsScreen.Contains(x)
                                 && !pro.production.industryScreen.Contains(x)
-                                && (pro.solar == null || !pro.solar.usesScreen(x)));
+                                && !pro.solar.usesScreen(x));
 
                         CheckMenu menuComp2 = new CheckMenu(this, "   Component2 Quota Screen Selection", "Select Component2 Quota Screen", pro);
                         menuComp2.setLabel("Choose the screens to display component2 quotas");
@@ -1380,17 +1400,17 @@ namespace IngameScript
                         List<IMyTerminalBlock> screensToolsQuota = pro.blocks.FindAll(x =>
                                 x is IMyTextPanel
                                 && !pro.usesScreen(x)
-                                && (pro.airlocks == null    || !pro.airlocks.usesScreen(x))
-                                && (pro.clock == null       || !pro.clock.usesScreen(x))
-                                && (pro.elevator == null    || !pro.elevator.usesScreen(x))
-                                && (pro.energy == null      || !pro.energy.usesScreen(x))
-                                && (pro.garage == null      || !pro.garage.usesScreen(x))
+                                && !pro.airlocks.usesScreen(x)
+                                && !pro.clock.usesScreen(x)
+                                && !pro.elevator.usesScreen(x)
+                                && !pro.energy.usesScreen(x)
+                                && !pro.garage.usesScreen(x)
                                 && !pro.production.oresScreen.Contains(x)
                                 && !pro.production.ingotsScreen.Contains(x)
                                 && !pro.production.components1Screen.Contains(x)
                                 && !pro.production.components2Screen.Contains(x)
                                 && !pro.production.industryScreen.Contains(x)
-                                && (pro.solar == null || !pro.solar.usesScreen(x)));
+                                && !pro.solar.usesScreen(x));
 
                         CheckMenu menuTools = new CheckMenu(this, "   Tools Quota Screen Selection", "Select Tools Quota Screen", pro);
                         menuTools.setLabel("Choose the screens to display tools quotas");
@@ -1405,17 +1425,17 @@ namespace IngameScript
                         List<IMyTerminalBlock> screensIndustryQuota = pro.blocks.FindAll(x =>
                                 x is IMyTextPanel
                                 && !pro.usesScreen(x)
-                                && (pro.airlocks == null    || !pro.airlocks.usesScreen(x))
-                                && (pro.clock == null       || !pro.clock.usesScreen(x))
-                                && (pro.elevator == null    || !pro.elevator.usesScreen(x))
-                                && (pro.energy == null      || !pro.energy.usesScreen(x))
-                                && (pro.garage == null      || !pro.garage.usesScreen(x))
+                                && !pro.airlocks.usesScreen(x)
+                                && !pro.clock.usesScreen(x)
+                                && !pro.elevator.usesScreen(x)
+                                && !pro.energy.usesScreen(x)
+                                && !pro.garage.usesScreen(x)
                                 && !pro.production.oresScreen.Contains(x)
                                 && !pro.production.ingotsScreen.Contains(x)
                                 && !pro.production.components1Screen.Contains(x)
                                 && !pro.production.components2Screen.Contains(x)
                                 && !pro.production.toolsScreen.Contains(x)
-                                && (pro.solar == null || !pro.solar.usesScreen(x)));
+                                && !pro.solar.usesScreen(x));
 
                         CheckMenu menuIndustry = new CheckMenu(this, "   Industry Status Screen Selection", "Select Industry Status Screen", pro);
                         menuIndustry.setLabel("Choose the screens to display tools quotas");
@@ -1812,7 +1832,6 @@ namespace IngameScript
 
             virtual public bool usesScreen(IMyTerminalBlock panel)
             {
-                pro.writeLog("usesScreen triggered!", true);
                 return false;
             }
         }
@@ -2046,7 +2065,6 @@ namespace IngameScript
 
             public override bool usesScreen(IMyTerminalBlock panel)
             {
-                pro.writeLog("production uses Screen triggered", true);
                 return oresScreen.Contains(panel)
                     || ingotsScreen.Contains(panel)
                     || components1Screen.Contains(panel)
@@ -2187,18 +2205,16 @@ namespace IngameScript
 
                     foreach (IMyAssembler ass in assemblers)
                     {
-                        if (ass.IsSameConstructAs(pro.me))
-                        {
-                            List<MyProductionItem> queue = new List<MyProductionItem>();
-                            MyDefinitionId? toAdd = CreateBlueprint(toCraft.key);
 
-                            if (toAdd != null)
+                        List<MyProductionItem> queue = new List<MyProductionItem>();
+                        MyDefinitionId? toAdd = CreateBlueprint(toCraft.key);
+                        
+                        if (toAdd != null)
+                        {
+                            ass.GetQueue(queue);
+                            if (!queue.Exists(x => x.BlueprintId.SubtypeId == toAdd.Value.SubtypeId))
                             {
-                                ass.GetQueue(queue);
-                                if (!queue.Exists(x => x.BlueprintId.SubtypeId == toAdd.Value.SubtypeId))
-                                {
-                                    ass.InsertQueueItem(i, (MyDefinitionId)toAdd, (decimal)delta);
-                                }
+                                ass.InsertQueueItem(i, (MyDefinitionId)toAdd, (decimal)delta);
                             }
                         }
                     }
@@ -2261,6 +2277,7 @@ namespace IngameScript
                 }
 
 				//TODO: delete this after some testing
+                pro.writeLog("C: " + containers.Count + " A: " + assemblers.Count + " R: " + refineries.Count + " I: " + restBlocks.Count);
                 runtimeFetch = pro.Runtime.CurrentInstructionCount - currInst;
             }
 

@@ -1,8 +1,15 @@
-﻿/*
- *   R e a d m e
- *   -----------
+﻿/* 
+ *   # CREDITS #
  * 
- *   In this file you can include any instructions or other comments you want to have injected onto the 
- *   top of your final script. You can safely delete this file if you do not want any such comments.
+ *  Keks:
+ *      For being an inspiration and an open ear for my whining
+ *  
+ *  Vindicar:
+ *      For giving me some templates I copy pasted:
+ *      https://github.com/the-vindicar/SE-LifeSupport/blob/master/LifeSupport/TaskStockManager.cs
+ *
+ *
+ *   # READ ME #
  * 
- */
+ * Nothing to read so far, have fun!
+  */
