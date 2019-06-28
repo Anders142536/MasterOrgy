@@ -418,152 +418,13 @@ namespace IngameScript
                 section = " Functionalities ";
                 if (ini.ContainsSection(section))
                 {
-                    //enableAirlocks
-                    if (ini.ContainsKey(new MyIniKey(section, "use Airlocks")))
-                    {
-                        if (ini.Get(section, "use Airlocks").TryGetBoolean(out enableAirlocks))
-                        {
-                            if (enableAirlocks)
-                            {
-                                airlocks = new Airlocks(this);
-                                canAirlocks = true;
-                            }
-                        } else
-                        {
-                            writeLog("use Airlocks requires either true, 1, false or 0");
-                        }
-                    }
-                    else
-                    {
-                        writeLog("No use Airlocks found in config");
-                        canMaster = false;
-                    }
-                    //enableClock
-                    if (ini.ContainsKey(new MyIniKey(section, "use Clock")))
-                    {
-                        if (ini.Get(section, "use Clock").TryGetBoolean(out enableClock))
-                        {
-                            if (enableClock)
-                            {
-                                clock = new Clock(this);
-                                canClock = true;
-                            }
-                        }
-                        else
-                        {
-                            writeLog("use Clock requires either true, 1, false or 0");
-                        }
-                    }
-                    else
-                    {
-                        writeLog("No use Clock found in config");
-                        canMaster = false;
-                    }
-                    //enableElevator
-                    if (ini.ContainsKey(new MyIniKey(section, "use Elevator")))
-                    {
-                        if (ini.Get(section, "use Elevator").TryGetBoolean(out enableElevator))
-                        {
-                            if (enableElevator)
-                            {
-                                elevator = new Elevator(this);
-                                canElevator = true;
-                            }
-                        }
-                        else
-                        {
-                            writeLog("use Elevator requires either true, 1, false or 0");
-                        }
-                    }
-                    else
-                    {
-                        writeLog("No use Elevator found in config");
-                        canMaster = false;
-                    }
-                    //enableEnergyManagement
-                    if (ini.ContainsKey(new MyIniKey(section, "use Energy Management")))
-                    {
-                        if (ini.Get(section, "use Energy Management").TryGetBoolean(out enableEnergyManagement))
-                        {
-                            if (enableEnergyManagement)
-                            {
-                                energy = new EnergyManagement(this);
-                                canEnergyManagement = true;
-                            }
-                        }
-                        else
-                        {
-                            writeLog("use Energy Management requires either true, 1, false or 0");
-                        }
-                    }
-                    else
-                    {
-                        writeLog("No use Energy Management found in config");
-                        canMaster = false;
-                    }
-                    //enableGarageManagement
-                    if (ini.ContainsKey(new MyIniKey(section, "use Garage Management")))
-                    {
-                        if (ini.Get(section, "use Garage Management").TryGetBoolean(out enableGarageManagement))
-                        {
-                            if (enableGarageManagement)
-                            {
-                                garage = new GarageManagement(this);
-                                canGarageManagement = true;
-                            }
-                        }
-                        else
-                        {
-                            writeLog("use Garage Management requires either true, 1, false or 0");
-                        }
-                    }
-                    else
-                    {
-                        writeLog("No use Garage Management found in config");
-                        canMaster = false;
-                    }
-                    //enableProductionManagement
-                    if (ini.ContainsKey(new MyIniKey(section, "use Production Management")))
-                    {
-                        if (ini.Get(section, "use Production Management").TryGetBoolean(out enableProductionManagement))
-                        {
-                            if (enableProductionManagement)
-                            {
-                                production = new ProductionManagement(this);
-                                canProductionManagement = true;
-                            }
-                        }
-                        else
-                        {
-                            writeLog("use Production Management requires either true, 1, false or 0");
-                        }
-                    }
-                    else
-                    {
-                        writeLog("No use Production Management found in config");
-                        canMaster = false;
-                    }
-                    //enableSolarpanelAdjustment
-                    if (ini.ContainsKey(new MyIniKey(section, "use Solarpanel Adjustment")))
-                    {
-                        if (ini.Get(section, "use Solarpanel Adjustment").TryGetBoolean(out enableSolarpanelAdjustment))
-                        {
-                            if (enableSolarpanelAdjustment)
-                            {
-                                solar = new SolarAdjustment(this);
-                                canSolarpanelAdjustment = true;
-                            }
-                        }
-                        else
-                        {
-                            writeLog("use Solarpanel Adjustment requires either true, 1, false or 0");
-                        }
-                    }
-                    else
-                    {
-                        writeLog("No use Solarpanel Adjustment found in config");
-                        canMaster = false;
-                    }
+                    loadFunctionality(ini, "use Airlocks", out enableAirlocks);
+                    loadFunctionality(ini, "use Clock", out enableClock);
+					loadFunctionality(ini, "use Elevator", out enableElevator);
+                    loadFunctionality(ini, "use Energy Management", out enableEnergyManagement);
+                    loadFunctionality(ini, "use Garage Management", out enableGarageManagement);
+                    loadFunctionality(ini, "use Production Management", out enableProductionManagement);
+                    loadFunctionality(ini, "use Solarpanel Adjustment", out enableSolarpanelAdjustment);
                 }
                 else
                 {
@@ -899,19 +760,23 @@ namespace IngameScript
 
         }
 
-        /*
+        
         void loadFunctionality(ref MyIni ini, String key, out bool enabler)
         {
             String section = " Functionalities ";
-            if (ini.ContainsSection(section))
-            {
-                if (ini.ContainsKey(new MyIniKey(section, key)))
-                {
-
-                }
-            }
+			if (ini.ContainsKey(new MyIniKey(section, key)))
+			{
+				if (!ini.Get(section, key).TryGetBoolean(out enabler))
+				{
+					writeLog(key + " requires either true, 1, false or 0");
+				}
+			} else
+			{
+				writeLog("No " + key + " found in config");
+				canMaster = false;
+			}
         }
-        */
+        
 
         void printIni()
         {
