@@ -437,25 +437,9 @@ namespace IngameScript
                  * * * * * */
                 if (enableAirlocks)
                 {
+					airlocks = new Airlocks();
+					canAirlocks = true;
                     section = " Airlocks ";
-                    if (ini.ContainsSection(section))
-                    {
-
-                        if (ini.ContainsKey(new MyIniKey(section, "Dummy Key")))
-                        {
-                            //assign value
-                        }
-                        else
-                        {
-                            writeLog("No Dummy Key found in config");
-                            canAirlocks = false;
-                        }
-                    }
-                    else
-                    {
-                        writeLog("No Airlocks section found in config");
-                        canAirlocks = false;
-                    }
                 }
 
                 /* * * * *
@@ -463,25 +447,9 @@ namespace IngameScript
                  * * * * */
                 if (enableClock)
                 {
+					clock = new Clock();
+					canClock = true;
                     section = " Clock ";
-                    if (ini.ContainsSection(section))
-                    {
-
-                        if (ini.ContainsKey(new MyIniKey(section, "Dummy Key")))
-                        {
-                            //assign value
-                        }
-                        else
-                        {
-                            writeLog("No Dummy Key found in config");
-                            canClock = false;
-                        }
-                    }
-                    else
-                    {
-                        writeLog("No Clock section found in config");
-                        canClock = false;
-                    }
                 }
 
                 /* * * * * * *
@@ -489,25 +457,9 @@ namespace IngameScript
                  * * * * * * */
                 if (enableElevator)
                 {
+					elevator = new Elevator();
+					canElevator = true;
                     section = " Elevator ";
-                    if (ini.ContainsSection(section))
-                    {
-
-                        if (ini.ContainsKey(new MyIniKey(section, "Dummy Key")))
-                        {
-                            //assign value
-                        }
-                        else
-                        {
-                            writeLog("No Dummy Key found in config");
-                            canElevator = false;
-                        }
-                    }
-                    else
-                    {
-                        writeLog("No Elevator section found in config");
-                        canElevator = false;
-                    }
                 }
 
                 /* * * * * * * * * * *
@@ -515,25 +467,9 @@ namespace IngameScript
                  * * * * * * * * * * */
                 if (enableEnergyManagement)
                 {
+					energy = new EnergyManagement();
+					canEnergyManagement = true;
                     section = " Energy Management ";
-                    if (ini.ContainsSection(section))
-                    {
-
-                        if (ini.ContainsKey(new MyIniKey(section, "Dummy Key")))
-                        {
-                            //assign value
-                        }
-                        else
-                        {
-                            writeLog("No Dummy Key found in config");
-                            canEnergyManagement = false;
-                        }
-                    }
-                    else
-                    {
-                        writeLog("No Energy Management section found in config");
-                        canEnergyManagement = false;
-                    }
                 }
 
                 /* * * * * * * * * * *
@@ -541,25 +477,9 @@ namespace IngameScript
                  * * * * * * * * * * */
                 if (enableGarageManagement)
                 {
+					garage = new GarageManagement();
+					canGarageManagement = true;
                     section = " Garage Management ";
-                    if (ini.ContainsSection(section))
-                    {
-
-                        if (ini.ContainsKey(new MyIniKey(section, "Dummy Key")))
-                        {
-                            //assign value
-                        }
-                        else
-                        {
-                            writeLog("No Dummy Key found in config");
-                            canGarageManagement = false;
-                        }
-                    }
-                    else
-                    {
-                        writeLog("No Garage Management section found in config");
-                        canGarageManagement = false;
-                    }
                 }
 
                 /* * * * * * * * * * * * *
@@ -567,6 +487,8 @@ namespace IngameScript
                  * * * * * * * * * * * * */
                 if (enableProductionManagement)
                 {
+					production = new ProductionManagement();
+					canProductionManagement = true;
                     section = " Production Management ";
                     if (ini.ContainsSection(section))
                     {
@@ -729,25 +651,9 @@ namespace IngameScript
                  * * * * * * * * * * * * */
                 if (enableSolarpanelAdjustment)
                 {
+					solar = new SolarAdjustment();
+					canSolarpanelAdjustment = true;
                     section = " Solarpanel Adjustment ";
-                    if (ini.ContainsSection(section))
-                    {
-
-                        if (ini.ContainsKey(new MyIniKey(section, "Dummy Key")))
-                        {
-                            //assign value
-                        }
-                        else
-                        {
-                            writeLog("No Dummy Key found in config");
-                            canSolarpanelAdjustment = false;
-                        }
-                    }
-                    else
-                    {
-                        writeLog("No Solarpanel Adjustment section found in config");
-                        canSolarpanelAdjustment = false;
-                    }
                 }
             } else
             {
