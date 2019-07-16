@@ -35,6 +35,19 @@ namespace IngameScript
          *  Clock / Lights
          *  
          *  Elevator
+		 *		Master:
+			knows of lines
+			setup of lines via checklist
+				when first is selected the list of possible stations is narrowed down in all directions with a certain threshhold (two blocks?)
+				when second is selected the list of possible stations is narrowed down further in the selected direction
+			allows setting of threshhold in large blocks as unit
+			
+			line:
+				stations
+					doors, button panels
+				recharge station
+		 *
+		 *		Wagon:
          *  
          *  Garage Door Management
          *  
